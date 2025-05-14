@@ -1,0 +1,66 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pay Fee</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5>Fee Details</h5>
+                                        <p><strong>Fee Type:</strong> {{fee.category.name}}</p>
+                                        <p><strong>Amount:</strong> ₹{{fee.amount}}</p>
+                                        <p><strong>Due Date:</strong> {{fee.due_date}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5>Payment</h5>
+                                        <form action="{% url 'payment_callback' %}" method="POST">
+                                            {% csrf_token %}
+                                            <script src="https://checkout.razorpay.com/v1/checkout.js"
+                                                data-key="{{RAZORPAY_KEY_ID}}"
+                                                data-amount="{{order.amount}}"
+                                                data-currency="{{order.currency}}"
+                                                data-order_id="{{order.id}}"
+                                                data-buttontext="Pay Now"
+                                                data-name="College Management System"
+                                                data-description="Fee Payment"
+                                                data-image="{% static 'dist/img/AdminLTELogo.png' %}"
+                                                data-prefill.name="{{student.admin.first_name}} {{student.admin.last_name}}"
+                                                data-prefill.email="{{student.admin.email}}"
+                                                data-theme.color="#007bff">
+                                            </script>
+                                            <input type="hidden" custom="Hidden Element" name="hidden">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Razorpay key to the page
+        window.RAZORPAY_KEY_ID = "{{RAZORPAY_KEY_ID}}";
+    });
+</script>
+{% endblock custom_js %} 

@@ -1,0 +1,58 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'add_fee_payment' %}" class="btn btn-primary">Record Payment</a>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Receipt No.</th>
+                                    <th>Student</th>
+                                    <th>Fee Type</th>
+                                    <th>Amount</th>
+                                    <th>Payment Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{payment.receipt_number}}</td>
+                                    <td>{{payment.student.admin.get_full_name}}</td>
+                                    <td>{{payment.fee.category.name}}</td>
+                                    <td>{{payment.amount_paid}}</td>
+                                    <td>{{payment.payment_date}}</td>
+                                    <td>
+                                        <span class="badge badge-{{payment.status|lower}}">{{payment.status}}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'view_fee_payment' payment.id %}" class="btn btn-info">View</a> - 
+                                        <a href="{% url 'print_fee_receipt' payment.id %}" class="btn btn-success" target="_blank">Print</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %} 
