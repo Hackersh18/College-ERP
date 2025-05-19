@@ -29,7 +29,11 @@
                               <tr>
                                   <td>{{forloop.counter}}</td>
                                   <td>{{feedback.staff}}</td>
-                                  <td>{{feedback.staff.course}}</td>
+                                  <td>
+                                      {% for course in feedback.staff.courses.all %}
+                                          <span class="badge badge-info">{{course.name}}</span>
+                                      {% endfor %}
+                                  </td>
                                   <td>{{feedback.feedback}}</td>
                                       
                                             

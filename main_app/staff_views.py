@@ -13,26 +13,53 @@ from .models import *
 
 def staff_home(request):
     staff = get_object_or_404(Staff, admin=request.user)
-    total_students = Student.objects.filter(course=staff.course).count()
-    total_leave = LeaveReportStaff.objects.filter(staff=staff).count()
+    total_students = Student.objects.filter(course__in=staff.courses.all()).count()
+    total_subjects = Subject.objects.filter(staff=staff).count()
+    total_courses = staff.courses.count()
+    
+    # Get attendance data
+    total_attendance = AttendanceReport.objects.filter(
+        attendance__subject__staff=staff
+    ).count()
+    
+    # Get leave data
+    total_leave = LeaveReportStaff.objects.filter(
+        staff=staff,
+        status=1
+    ).count()
+    
+    # Get subject-wise attendance data
     subjects = Subject.objects.filter(staff=staff)
-    total_subject = subjects.count()
-    attendance_list = Attendance.objects.filter(subject__in=subjects)
-    total_attendance = attendance_list.count()
-    attendance_list = []
     subject_list = []
+    attendance_list = []
     for subject in subjects:
-        attendance_count = Attendance.objects.filter(subject=subject).count()
         subject_list.append(subject.name)
+        attendance_count = AttendanceReport.objects.filter(
+            attendance__subject=subject
+        ).count()
         attendance_list.append(attendance_count)
+    
+    # Get recent notifications
+    notifications = NotificationStaff.objects.filter(
+        staff=staff
+    ).order_by('-created_at')[:5]
+    
+    # Get recent leave applications
+    recent_leaves = LeaveReportStaff.objects.filter(
+        staff=staff
+    ).order_by('-created_at')[:5]
+    
     context = {
-        'page_title': 'Staff Panel - ' + str(staff.admin.last_name) + ' (' + str(staff.course) + ')',
         'total_students': total_students,
+        'total_subjects': total_subjects,
+        'total_courses': total_courses,
         'total_attendance': total_attendance,
         'total_leave': total_leave,
-        'total_subject': total_subject,
-        'subject_list': subject_list,
-        'attendance_list': attendance_list
+        'subject_list': json.dumps(subject_list),
+        'attendance_list': attendance_list,
+        'notifications': notifications,
+        'recent_leaves': recent_leaves,
+        'page_title': 'Staff Panel - ' + str(staff.admin.last_name) + ' (' + ', '.join(course.name for course in staff.courses.all()) + ')',
     }
     return render(request, 'staff_template/home_content.html', context)
 
@@ -339,18 +366,20 @@ def staff_add_result(request):
             student_id = request.POST.get('student_list')
             subject_id = request.POST.get('subject')
             test = request.POST.get('test')
-            exam = request.POST.get('exam')
+            exam_title = request.POST.get('exam_title')
+            max_score = request.POST.get('max_score')
             student = get_object_or_404(Student, id=student_id)
             subject = get_object_or_404(Subject, id=subject_id)
             try:
                 data = StudentResult.objects.get(
                     student=student, subject=subject)
-                data.exam = exam
+                data.max_score = max_score
                 data.test = test
+                data.exam_title = exam_title
                 data.save()
                 messages.success(request, "Scores Updated")
             except:
-                result = StudentResult(student=student, subject=subject, test=test, exam=exam)
+                result = StudentResult(student=student, subject=subject, test=test, max_score=max_score, exam_title=exam_title)
                 result.save()
                 messages.success(request, "Scores Saved")
         except Exception as e:
@@ -367,8 +396,9 @@ def fetch_student_result(request):
         subject = get_object_or_404(Subject, id=subject_id)
         result = StudentResult.objects.get(student=student, subject=subject)
         result_data = {
-            'exam': result.exam,
-            'test': result.test
+            'max_score': result.max_score,
+            'test': result.test,
+            'exam_title': result.exam_title
         }
         return HttpResponse(json.dumps(result_data))
     except Exception as e:

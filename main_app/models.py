@@ -59,11 +59,14 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.last_name + ", " + self.first_name
+        return self.first_name + " " + self.last_name
 
 
 class Admin(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.admin.first_name + " " + self.admin.last_name
 
 
 
@@ -84,16 +87,15 @@ class Student(models.Model):
     session = models.ForeignKey(Session, on_delete=models.PROTECT, null=True)
 
     def __str__(self):
-        return self.admin.last_name + ", " + self.admin.first_name
+        return self.admin.first_name + " " + self.admin.last_name
 
 
 class Staff(models.Model):
-    
-    course = models.ForeignKey(Course, on_delete=models.PROTECT, null=True, blank=False)
+    courses = models.ManyToManyField(Course)
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.admin.last_name + " " + self.admin.first_name
+        return self.admin.first_name + " " + self.admin.last_name
 
 
 class Subject(models.Model):
@@ -177,7 +179,8 @@ class StudentResult(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     test = models.FloatField(default=0)
-    exam = models.FloatField(default=0)
+    exam_title = models.CharField(max_length=100, default="Final Exam")
+    max_score = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

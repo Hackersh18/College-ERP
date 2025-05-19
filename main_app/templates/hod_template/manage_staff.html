@@ -11,6 +11,9 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">{{page_title}}</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'add_staff' %}" class="btn btn-primary">Add Staff</a>
+                        </div>
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
@@ -18,10 +21,10 @@
                             <thead class="thead-dark">
                                 <tr>
                                     <th>#</th>
-                                    <th>Full Name</th>
+                                    <th>Name</th>
                                     <th>Email</th>
                                     <th>Gender</th>
-                                    <th>Course</th>
+                                    <th>Courses</th>
                                     <th>Avatar</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -31,10 +34,20 @@
                                 {% for staff in allStaff %}
                                 <tr>
                                     <td>{{ forloop.counter }}</td>
-                                    <td>{{staff.last_name}}, {{staff.first_name}}</td>
+                                    <td>{{staff.first_name}} {{staff.last_name}}</td>
                                     <td>{{staff.email}}</td>
                                     <td>{{staff.gender}}</td>
-                                    <td>{{staff.staff.course.name}}</td>
+                                    <td>
+                                        <div title="Courses assigned to this staff member">
+                                            {% if staff.staff.courses.all %}
+                                                {% for course in staff.staff.courses.all %}
+                                                    <span class="badge badge-info mb-1 mr-1" style="font-size: 0.95em;">{{course.name}}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">No courses assigned</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                     <td>
                                         {% if staff.profile_pic == ""  %}
                                         No Image

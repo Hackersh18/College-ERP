@@ -80,8 +80,10 @@ class StaffForm(CustomUserForm):
 
     class Meta(CustomUserForm.Meta):
         model = Staff
-        fields = CustomUserForm.Meta.fields + \
-            ['course' ]
+        fields = CustomUserForm.Meta.fields + ['courses']
+        widgets = {
+            'courses': forms.CheckboxSelectMultiple(),
+        }
 
 
 class CourseForm(FormSettings):
@@ -188,7 +190,7 @@ class EditResultForm(FormSettings):
 
     class Meta:
         model = StudentResult
-        fields = ['session_year', 'subject', 'student', 'test', 'exam']
+        fields = ['session_year', 'subject', 'student', 'test', 'exam_title', 'max_score']
 
 
 class AssignmentForm(forms.ModelForm):

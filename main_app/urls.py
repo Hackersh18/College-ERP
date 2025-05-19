@@ -132,6 +132,7 @@ urlpatterns = [
     path('add-fee-category/', hod_views.add_fee_category, name='add_fee_category'),
     path('manage-fees/', hod_views.manage_fees, name='manage_fees'),
     path('add-fee/', hod_views.add_fee, name='add_fee'),
+    path('delete-fee/<int:fee_id>/', hod_views.delete_fee, name='delete_fee'),
     path('manage-fee-payments/', hod_views.manage_fee_payments, name='manage_fee_payments'),
     path('add-fee-payment/', hod_views.add_fee_payment, name='add_fee_payment'),
     path('view-fee-payment/<int:payment_id>/', hod_views.view_fee_payment, name='view_fee_payment'),

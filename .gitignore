@@ -1,3 +1,7 @@
+# Environment variables
+.env
+.env.*
+
 # Python
 __pycache__/
 *.py[cod]
@@ -28,11 +32,14 @@ db.sqlite3-journal
 media/
 staticfiles/
 
-# Environment
-.env
-.venv
-env/
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/

@@ -97,7 +97,7 @@ def add_staff(request):
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password')
-            course = form.cleaned_data.get('course')
+            courses = form.cleaned_data.get('courses')
             passport = request.FILES.get('profile_pic')
             fs = FileSystemStorage()
             filename = fs.save(passport.name, passport)
@@ -107,8 +107,13 @@ def add_staff(request):
                     email=email, password=password, user_type=2, first_name=first_name, last_name=last_name, profile_pic=passport_url)
                 user.gender = gender
                 user.address = address
-                user.staff.course = course
                 user.save()
+                
+                # The Staff object is created by the signal, so just update courses
+                staff = user.staff
+                staff.courses.set(courses)
+                staff.save()
+                
                 messages.success(request, "Successfully Added")
                 return redirect(reverse('add_staff'))
 
@@ -253,15 +258,13 @@ def edit_staff(request, staff_id):
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
             address = form.cleaned_data.get('address')
-            username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password') or None
-            course = form.cleaned_data.get('course')
+            courses = form.cleaned_data.get('courses')
             passport = request.FILES.get('profile_pic') or None
             try:
                 user = CustomUser.objects.get(id=staff.admin.id)
-                user.username = username
                 user.email = email
                 if password != None:
                     user.set_password(password)
@@ -274,19 +277,19 @@ def edit_staff(request, staff_id):
                 user.last_name = last_name
                 user.gender = gender
                 user.address = address
-                staff.course = course
                 user.save()
+                
+                # Update staff courses
+                staff.courses.set(courses)
                 staff.save()
+                
                 messages.success(request, "Successfully Updated")
                 return redirect(reverse('edit_staff', args=[staff_id]))
             except Exception as e:
                 messages.error(request, "Could Not Update " + str(e))
         else:
-            messages.error(request, "Please fil form properly")
-    else:
-        user = CustomUser.objects.get(id=staff_id)
-        staff = Staff.objects.get(id=user.id)
-        return render(request, "hod_template/edit_staff_template.html", context)
+            messages.error(request, "Please fill form properly")
+    return render(request, "hod_template/edit_staff_template.html", context)
 
 
 def edit_student(request, student_id):
@@ -948,3 +951,13 @@ def print_fee_receipt(request, payment_id):
         'page_title': 'Payment Receipt'
     }
     return render(request, "hod_template/print_fee_receipt.html", context)
+
+
+def delete_fee(request, fee_id):
+    fee = get_object_or_404(Fee, id=fee_id)
+    try:
+        fee.delete()
+        messages.success(request, "Fee deleted successfully!")
+    except Exception as e:
+        messages.error(request, f"Could not delete fee: {str(e)}")
+    return redirect(reverse('manage_fees'))

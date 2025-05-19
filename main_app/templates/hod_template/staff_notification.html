@@ -33,7 +33,11 @@
                                     <td>{{staff.last_name}}, {{staff.first_name}}</td>
                                     <td>{{staff.email}}</td>
                                     <td>{{staff.gender}}</td>
-                                    <td>{{staff.staff.course.name}}</td>
+                                    <td>
+                                        {% for course in staff.staff.courses.all %}
+                                            <span class="badge badge-info">{{course.name}}</span>
+                                        {% endfor %}
+                                    </td>
                                     <td>
                                         {% if staff.profile_pic == ""  %}
                                         No Image

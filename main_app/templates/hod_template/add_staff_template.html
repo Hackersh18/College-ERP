@@ -13,24 +13,69 @@
         font-weight: bold;
         color: green;
       }
+      /* Custom style for checkbox grid */
+      .checkbox-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .checkbox-grid label {
+        margin-right: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+      .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
   </style>
 {% endblock custom_css %}
 {% block content %}
 
 <section class="content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
                 <!-- general form elements -->
-                <div class="card card-dark">
+                <div class="card card-dark shadow">
                     <div class="card-header">
                         <h3 class="card-title">{{page_title}}</h3>
                     </div>
-
-                    {% include "main_app/form_template.html" with messages=messages  form=form button_text="Add Staff"%}
+                    <form role="form" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% for field in form  %}
+                                {% if field.name == 'courses' %}
+                                    <div class="form-section-title">Assign Courses</div>
+                                    <div class="checkbox-grid">
+                                        {% for checkbox in field %}
+                                            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="form-group mb-3">
+                                        {{field.label_tag}}
+                                        {{field}}
+                                        <div class="text-danger small">{{field.errors}}</div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <button type="submit" class="btn btn-success btn-block">
+                                {% if button_text %}
+                                {{button_text}}
+                                {% else %}
+                                Submit
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
                 </div>
                 <!-- /.card -->
-
             </div>
         </div>
     </div>
@@ -44,7 +89,6 @@
     }
     $(document).ready(function(){
         $("#id_email").keyup(function(){
-            
             var email = $(this).val()
             if (validateEmail(email)){
             $.ajax({
