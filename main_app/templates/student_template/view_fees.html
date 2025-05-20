@@ -18,6 +18,7 @@
                                     <th>#</th>
                                     <th>Fee Type</th>
                                     <th>Amount</th>
+                                    <th>Payment Period</th>
                                     <th>Due Date</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -29,6 +30,7 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{fee.category.name}}</td>
                                     <td>₹{{fee.amount}}</td>
+                                    <td>{{fee.get_payment_period_display}}</td>
                                     <td>{{fee.due_date}}</td>
                                     <td>
                                         {% with payment=fee.feepayment_set.filter.first %}

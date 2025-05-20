@@ -223,7 +223,7 @@ class FeeForm(FormSettings):
 
     class Meta:
         model = Fee
-        fields = ['category', 'course', 'amount', 'due_date', 'is_active']
+        fields = ['category', 'course', 'amount', 'payment_period', 'due_date', 'is_active']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -239,3 +239,21 @@ class FeePaymentForm(FormSettings):
         widgets = {
             'payment_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+class StudentImportForm(forms.Form):
+    file = forms.FileField(
+        label='Select a file',
+        help_text='Upload Excel (.xlsx) or CSV (.csv) file',
+        widget=forms.FileInput(attrs={'accept': '.xlsx,.csv'})
+    )
+    session = forms.ModelChoiceField(
+        queryset=Session.objects.all(),
+        required=True,
+        label='Session'
+    )
+    course = forms.ModelChoiceField(
+        queryset=Course.objects.all(),
+        required=True,
+        label='Course'
+    )

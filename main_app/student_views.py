@@ -277,7 +277,8 @@ def initiate_payment(request, fee_id):
         'order': order,
         'fee': fee,
         'student': student,
-        'page_title': 'Pay Fee'
+        'page_title': 'Pay Fee',
+        'RAZORPAY_KEY_ID': settings.RAZORPAY_KEY_ID
     }
     
     return render(request, 'student_template/payment.html', context)

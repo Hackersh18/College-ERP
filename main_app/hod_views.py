@@ -1,5 +1,6 @@
 import json
 import requests
+import pandas as pd
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse, JsonResponse
@@ -9,6 +10,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import UpdateView
+from django.contrib.auth.hashers import make_password
 
 from .forms import *
 from .models import *
@@ -961,3 +963,94 @@ def delete_fee(request, fee_id):
     except Exception as e:
         messages.error(request, f"Could not delete fee: {str(e)}")
     return redirect(reverse('manage_fees'))
+
+
+def edit_fee(request, fee_id):
+    fee = get_object_or_404(Fee, id=fee_id)
+    form = FeeForm(request.POST or None, instance=fee)
+    context = {
+        'form': form,
+        'fee': fee,
+        'page_title': 'Edit Fee'
+    }
+    if request.method == 'POST':
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, "Fee updated successfully!")
+                return redirect(reverse('manage_fees'))
+            except Exception as e:
+                messages.error(request, f"Could not update fee: {str(e)}")
+        else:
+            messages.error(request, "Please fill the form properly!")
+    return render(request, "hod_template/edit_fee.html", context)
+
+
+def import_students(request):
+    if request.method == 'POST':
+        form = StudentImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                file = request.FILES['file']
+                session = form.cleaned_data['session']
+                course = form.cleaned_data['course']
+                
+                # Read the file based on its extension
+                if file.name.endswith('.csv'):
+                    df = pd.read_csv(file)
+                else:
+                    df = pd.read_excel(file)
+                
+                # Required columns
+                required_columns = ['first_name', 'last_name', 'email', 'gender', 'address']
+                if not all(col in df.columns for col in required_columns):
+                    messages.error(request, f"File must contain these columns: {', '.join(required_columns)}")
+                    return redirect('import_students')
+                
+                success_count = 0
+                error_count = 0
+                
+                for _, row in df.iterrows():
+                    try:
+                        # Check if user with this email already exists
+                        if CustomUser.objects.filter(email=row['email']).exists():
+                            error_count += 1
+                            continue
+                        
+                        # Create user
+                        user = CustomUser.objects.create(
+                            email=row['email'],
+                            first_name=row['first_name'],
+                            last_name=row['last_name'],
+                            gender=row['gender'],
+                            address=row['address'],
+                            user_type=3,  # Student type
+                            password=make_password('password123')  # Default password
+                        )
+                        
+                        # Create student profile
+                        Student.objects.create(
+                            admin=user,
+                            course=course,
+                            session=session
+                        )
+                        
+                        success_count += 1
+                        
+                    except Exception as e:
+                        error_count += 1
+                        continue
+                
+                messages.success(request, f"Successfully imported {success_count} students. Failed: {error_count}")
+                return redirect('manage_student')
+                
+            except Exception as e:
+                messages.error(request, f"Error processing file: {str(e)}")
+    else:
+        form = StudentImportForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Import Students'
+    }
+    return render(request, 'hod_template/import_students.html', context)

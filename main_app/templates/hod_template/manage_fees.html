@@ -44,8 +44,12 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="#" class="btn btn-info">Edit</a> - 
-                                        <a href="{% url 'delete_fee' fee.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this fee?')">Delete</a>
+                                        <a href="{% url 'edit_fee' fee.id %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'delete_fee' fee.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this fee?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}

@@ -220,16 +220,24 @@ class FeeCategory(models.Model):
         return self.name
 
 class Fee(models.Model):
+    PAYMENT_PERIOD = (
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('HALF_YEARLY', 'Half Yearly'),
+        ('ANNUAL', 'Annual')
+    )
+    
     category = models.ForeignKey(FeeCategory, on_delete=models.PROTECT)
     course = models.ForeignKey(Course, on_delete=models.PROTECT)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_period = models.CharField(max_length=20, choices=PAYMENT_PERIOD, default='MONTHLY')
     due_date = models.DateField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.category.name} - {self.course.name} - {self.amount}"
+        return f"{self.category.name} - {self.course.name} - {self.amount} ({self.get_payment_period_display()})"
 
 class FeePayment(models.Model):
     PAYMENT_STATUS = (

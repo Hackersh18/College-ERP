@@ -170,3 +170,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(prod_db)
+
+# Razorpay Settings
+RAZORPAY_KEY_ID = 'rzp_test_your_key_id_here'  # Replace with your test key ID
+RAZORPAY_KEY_SECRET = 'your_key_secret_here'    # Replace with your test key secret
