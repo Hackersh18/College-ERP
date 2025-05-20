@@ -103,10 +103,19 @@ DATABASES = {
 
 # Update database configuration if DATABASE_URL is set
 if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=500,
-        ssl_require=True
-    )
+    try:
+        DATABASES['default'] = dj_database_url.parse(
+            os.environ.get('DATABASE_URL'),
+            conn_max_age=500,
+            ssl_require=True
+        )
+    except Exception as e:
+        print(f"Error parsing DATABASE_URL: {e}")
+        # Fallback to SQLite if DATABASE_URL is invalid
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
 
 
 
