@@ -20,4 +20,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'college_management_system.setti
 
 # Import Django's WSGI application
 from django.core.wsgi import get_wsgi_application
+
+# Ensure the application is properly configured
 application = get_wsgi_application()
