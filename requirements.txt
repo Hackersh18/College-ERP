@@ -2,6 +2,7 @@ Django
 djangorestframework
 djangorestframework_simplejwt
 djoser
+dotenv
 dj-database-url
 mysql-connector
 Pillow
