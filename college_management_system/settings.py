@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7'  # Consider using your secret key
+SECRET_KEY = os.environ.get('SECRET_KEY', 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -103,19 +103,11 @@ DATABASES = {
 
 # Update database configuration if DATABASE_URL is set
 if 'DATABASE_URL' in os.environ:
-    try:
-        DATABASES['default'] = dj_database_url.parse(
-            os.environ.get('DATABASE_URL'),
-            conn_max_age=500,
-            ssl_require=True
-        )
-    except Exception as e:
-        print(f"Error parsing DATABASE_URL: {e}")
-        # Fallback to SQLite if DATABASE_URL is invalid
-        DATABASES['default'] = {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 
 
 
@@ -180,13 +172,22 @@ DEFAULT_FROM_EMAIL = f"AEH ERP Portal <{os.environ.get('EMAIL_ADDRESS')}>"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Ensure static files are served in production
+# Production settings
 if not DEBUG:
+    # Security settings
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # Static files
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     WHITENOISE_USE_FINDERS = True
     WHITENOISE_MANIFEST_STRICT = False
     WHITENOISE_ALLOW_ALL_ORIGINS = True
 
 # Razorpay Settings
-RAZORPAY_KEY_ID = 'rzp_test_your_key_id_here'  # Replace with your test key ID
-RAZORPAY_KEY_SECRET = 'your_key_secret_here'    # Replace with your test key secret
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_your_key_id_here')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'your_key_secret_here')
