@@ -1,1 +1,1 @@
-web: gunicorn --chdir . college_management_system.wsgi:application --log-file - --workers 2 --bind 0.0.0.0:$PORT
+web: gunicorn college_management_system.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile - --log-level info --preload
