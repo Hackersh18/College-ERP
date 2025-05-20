@@ -15,6 +15,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+
+
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -96,15 +99,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'django',
-    #     'USER': os.environ.get('DB_USER'),
-    #     'PASSWORD': os.environ.get('DB_PASS'),
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '3307'
-    # }
 }
+
+# Update database configuration if DATABASE_URL is set
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=500,
+        ssl_require=True
+    )
+
 
 
 # Password validation
@@ -167,9 +170,6 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = f"AEH ERP Portal <{os.environ.get('EMAIL_ADDRESS')}>"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-prod_db = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(prod_db)
 
 # Razorpay Settings
 RAZORPAY_KEY_ID = 'rzp_test_your_key_id_here'  # Replace with your test key ID
