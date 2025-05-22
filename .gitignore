@@ -53,5 +53,3 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db 
-
-college_management/settings.py
