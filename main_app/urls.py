@@ -102,4 +102,7 @@ urlpatterns = [
     
     # Test URL
     path('test-login/', views.test_login, name='test_login'),
+    
+    # Temporary deployment URL (remove after use)
+    path('run-migrations/', views.run_migrations, name='run_migrations'),
 ]

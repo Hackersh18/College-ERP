@@ -9,6 +9,9 @@ from django.views.decorators.http import require_POST
 
 from .EmailBackend import EmailBackend
 from .models import Lead, NotificationCounsellor, NotificationAdmin, Counsellor
+from django.core.management import call_command
+from django.http import HttpResponse
+from io import StringIO
 
 # Create your views here.
 
@@ -174,3 +177,18 @@ def delete_admin_notification(request, notification_id):
     else:
         messages.error(request, "Access denied!")
         return redirect(reverse('login_page'))
+
+
+def run_migrations(request):
+    """Temporary view to run migrations after deployment (remove after use)"""
+    if not request.user.is_superuser:
+        return HttpResponse("Access denied", status=403)
+    
+    try:
+        output = StringIO()
+        call_command('migrate', stdout=output)
+        result = output.getvalue()
+        
+        return HttpResponse(f"<h1>Migrations completed</h1><pre>{result}</pre>")
+    except Exception as e:
+        return HttpResponse(f"<h1>Migration failed</h1><pre>{str(e)}</pre>")
