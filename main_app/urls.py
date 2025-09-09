@@ -1,4 +1,4 @@
-"""college_management_system URL Configuration
+"""CRM System URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.1/topics/http/urls/
@@ -16,127 +16,90 @@ Including another URLconf
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
-from main_app.EditResultView import EditResultView
-
-from . import hod_views, staff_views, student_views, views
+from . import admin_views, counsellor_views, views
 
 urlpatterns = [
+    # Authentication URLs
     path("", views.login_page, name='login_page'),
-    path("get_attendance", views.get_attendance, name='get_attendance'),
-    path("firebase-messaging-sw.js", views.showFirebaseJS, name='showFirebaseJS'),
     path("doLogin/", views.doLogin, name='user_login'),
     path("logout_user/", views.logout_user, name='user_logout'),
-    path("admin/home/", hod_views.admin_home, name='admin_home'),
-    path("staff/add", hod_views.add_staff, name='add_staff'),
-    path("course/add", hod_views.add_course, name='add_course'),
-    path("send_student_notification/", hod_views.send_student_notification,
-         name='send_student_notification'),
-    path("send_staff_notification/", hod_views.send_staff_notification,
-         name='send_staff_notification'),
-    path("add_session/", hod_views.add_session, name='add_session'),
-    path("admin_notify_student", hod_views.admin_notify_student,
-         name='admin_notify_student'),
-    path("admin_notify_staff", hod_views.admin_notify_staff,
-         name='admin_notify_staff'),
-    path("admin_view_profile", hod_views.admin_view_profile,
-         name='admin_view_profile'),
-    path("check_email_availability", hod_views.check_email_availability,
-         name="check_email_availability"),
-    path("session/manage/", hod_views.manage_session, name='manage_session'),
-    path("session/edit/<int:session_id>",
-         hod_views.edit_session, name='edit_session'),
-    path("student/view/feedback/", hod_views.student_feedback_message,
-         name="student_feedback_message",),
-    path("staff/view/feedback/", hod_views.staff_feedback_message,
-         name="staff_feedback_message",),
-    path("student/view/leave/", hod_views.view_student_leave,
-         name="view_student_leave",),
-    path("staff/view/leave/", hod_views.view_staff_leave, name="view_staff_leave",),
-    path("attendance/view/", hod_views.admin_view_attendance,
-         name="admin_view_attendance",),
-    path("attendance/fetch/", hod_views.get_admin_attendance,
-         name='get_admin_attendance'),
-    path("student/add/", hod_views.add_student, name='add_student'),
-    path("subject/add/", hod_views.add_subject, name='add_subject'),
-    path("staff/manage/", hod_views.manage_staff, name='manage_staff'),
-    path("student/manage/", hod_views.manage_student, name='manage_student'),
-    path("student/import/", hod_views.import_students, name='import_students'),
-    path("course/manage/", hod_views.manage_course, name='manage_course'),
-    path("subject/manage/", hod_views.manage_subject, name='manage_subject'),
-    path("staff/edit/<int:staff_id>", hod_views.edit_staff, name='edit_staff'),
-    path("staff/delete/<int:staff_id>",
-         hod_views.delete_staff, name='delete_staff'),
-
-    path("course/delete/<int:course_id>",
-         hod_views.delete_course, name='delete_course'),
-
-    path("subject/delete/<int:subject_id>",
-         hod_views.delete_subject, name='delete_subject'),
-
-    path("session/delete/<int:session_id>",
-         hod_views.delete_session, name='delete_session'),
-
-    path("student/delete/<int:student_id>",
-         hod_views.delete_student, name='delete_student'),
-    path("student/edit/<int:student_id>",
-         hod_views.edit_student, name='edit_student'),
-    path("course/edit/<int:course_id>",
-         hod_views.edit_course, name='edit_course'),
-    path("subject/edit/<int:subject_id>",
-         hod_views.edit_subject, name='edit_subject'),
-
-    # Staff URL patterns
-    path('staff_home', staff_views.staff_home, name='staff_home'),
-    path('staff_take_attendance', staff_views.staff_take_attendance, name='staff_take_attendance'),
-    path('get_students', staff_views.get_students, name='get_students'),
-    path('save_attendance', staff_views.save_attendance, name='save_attendance'),
-    path('staff_update_attendance', staff_views.staff_update_attendance, name='staff_update_attendance'),
-    path('get_student_attendance', staff_views.get_student_attendance, name='get_student_attendance'),
-    path('update_attendance', staff_views.update_attendance, name='update_attendance'),
-    path('staff_apply_leave', staff_views.staff_apply_leave, name='staff_apply_leave'),
-    path('staff_feedback', staff_views.staff_feedback, name='staff_feedback'),
-    path('staff_view_profile', staff_views.staff_view_profile, name='staff_view_profile'),
-    path('staff_fcmtoken', staff_views.staff_fcmtoken, name='staff_fcmtoken'),
-    path('staff_view_notification', staff_views.staff_view_notification, name='staff_view_notification'),
-    path('staff_add_result', staff_views.staff_add_result, name='staff_add_result'),
-    path('staff_add_assignment', staff_views.staff_add_assignment, name='staff_add_assignment'),
-    path('staff_add_note', staff_views.staff_add_note, name='staff_add_note'),
-    path('staff_delete_assignment/<int:assignment_id>', staff_views.staff_delete_assignment, name='staff_delete_assignment'),
-    path('staff_delete_note/<int:note_id>', staff_views.staff_delete_note, name='staff_delete_note'),
-
-    # Student URL patterns
-    path('student_home', student_views.student_home, name='student_home'),
-    path('student_view_attendance', student_views.student_view_attendance, name='student_view_attendance'),
-    path('student_apply_leave', student_views.student_apply_leave, name='student_apply_leave'),
-    path('student_feedback', student_views.student_feedback, name='student_feedback'),
-    path('student_view_profile', student_views.student_view_profile, name='student_view_profile'),
-    path('student_fcmtoken', student_views.student_fcmtoken, name='student_fcmtoken'),
-    path('student_view_notification', student_views.student_view_notification, name='student_view_notification'),
-    path('student_view_result', student_views.student_view_result, name='student_view_result'),
-    path('student_view_assignments', student_views.student_view_assignments, name='student_view_assignments'),
-    path('student_view_notes', student_views.student_view_notes, name='student_view_notes'),
-    path('student_view_fees', student_views.student_view_fees, name='student_view_fees'),
-    path('student_fee_payments', student_views.student_fee_payments, name='student_fee_payments'),
-    path('initiate_payment/<int:fee_id>', student_views.initiate_payment, name='initiate_payment'),
-    path('payment_callback', student_views.payment_callback, name='payment_callback'),
+    path("firebase-messaging-sw.js", views.showFirebaseJS, name='showFirebaseJS'),
+    
+    # Password Reset URLs
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-    path("group_student_notification/", hod_views.group_student_notification, name="group_student_notification"),
-    path("group_staff_notification/", hod_views.group_staff_notification, name="group_staff_notification"),
-    path('student/notification/delete/<int:notification_id>/', views.delete_student_notification, name='delete_student_notification'),
-    path('staff/notification/delete/<int:notification_id>/', views.delete_staff_notification, name='delete_staff_notification'),
-
-    # Fee Management URLs
-    path('manage-fee-categories/', hod_views.manage_fee_categories, name='manage_fee_categories'),
-    path('add-fee-category/', hod_views.add_fee_category, name='add_fee_category'),
-    path('manage-fees/', hod_views.manage_fees, name='manage_fees'),
-    path('add-fee/', hod_views.add_fee, name='add_fee'),
-    path('edit-fee/<int:fee_id>/', hod_views.edit_fee, name='edit_fee'),
-    path('delete-fee/<int:fee_id>/', hod_views.delete_fee, name='delete_fee'),
-    path('manage-fee-payments/', hod_views.manage_fee_payments, name='manage_fee_payments'),
-    path('add-fee-payment/', hod_views.add_fee_payment, name='add_fee_payment'),
-    path('view-fee-payment/<int:payment_id>/', hod_views.view_fee_payment, name='view_fee_payment'),
-    path('print-fee-receipt/<int:payment_id>/', hod_views.print_fee_receipt, name='print_fee_receipt'),
+    
+    # Admin URLs
+    path("admin/home/", admin_views.admin_home, name='admin_home'),
+    path("admin/profile/", admin_views.admin_view_profile, name='admin_view_profile'),
+    path("admin/notifications/", admin_views.admin_view_notifications, name='admin_view_notifications'),
+    
+    # Counsellor Management
+    path("counsellor/add/", admin_views.add_counsellor, name='add_counsellor'),
+    path("counsellor/manage/", admin_views.manage_counsellors, name='manage_counsellors'),
+    path("counsellor/edit/<int:counsellor_id>/", admin_views.edit_counsellor, name='edit_counsellor'),
+    path("counsellor/delete/<int:counsellor_id>/", admin_views.delete_counsellor, name='delete_counsellor'),
+    path("counsellor/performance/", admin_views.counsellor_performance, name='counsellor_performance'),
+    
+    # Lead Management
+    path("leads/manage/", admin_views.manage_leads, name='manage_leads'),
+    path("leads/add/", admin_views.add_lead, name='add_lead'),
+    path("leads/edit/<int:lead_id>/", admin_views.edit_lead, name='edit_lead'),
+    path("leads/delete/<int:lead_id>/", admin_views.delete_lead, name='delete_lead'),
+    path("leads/import/", admin_views.import_leads, name='import_leads'),
+    path("leads/assign/", admin_views.assign_leads_to_counsellors, name='assign_leads_to_counsellors'),
+    path("leads/transfer/<int:lead_id>/", admin_views.transfer_lead, name='transfer_lead'),
+    
+    # Lead Sources
+    path("lead-sources/manage/", admin_views.manage_lead_sources, name='manage_lead_sources'),
+    path("lead-sources/add/", admin_views.add_lead_source, name='add_lead_source'),
+    path("lead-sources/edit/<int:source_id>/", admin_views.edit_lead_source, name='edit_lead_source'),
+    path("lead-sources/delete/<int:source_id>/", admin_views.delete_lead_source, name='delete_lead_source'),
+    
+    # Business Management
+    path("businesses/manage/", admin_views.manage_businesses, name='manage_businesses'),
+    
+    # Notifications
+    path("notifications/send/", admin_views.send_counsellor_notification, name='send_counsellor_notification'),
+    
+    # Analytics
+    path("analytics/leads/", admin_views.get_lead_analytics, name='get_lead_analytics'),
+    
+    # Counsellor URLs
+    path('counsellor/home/', counsellor_views.counsellor_home, name='counsellor_home'),
+    path('counsellor/profile/', counsellor_views.counsellor_view_profile, name='counsellor_view_profile'),
+    path('counsellor/notifications/', counsellor_views.counsellor_view_notifications, name='counsellor_view_notifications'),
+    path('counsellor/fcmtoken/', counsellor_views.counsellor_fcmtoken, name='counsellor_fcmtoken'),
+    
+    # Counsellor Lead Management
+    path('counsellor/leads/', counsellor_views.my_leads, name='my_leads'),
+    path('counsellor/leads/<int:lead_id>/', counsellor_views.lead_detail, name='lead_detail'),
+    path('counsellor/leads/<int:lead_id>/activity/add/', counsellor_views.add_lead_activity, name='add_lead_activity'),
+    path('counsellor/leads/<int:lead_id>/status/update/', counsellor_views.update_lead_status, name='update_lead_status'),
+    path('counsellor/leads/<int:lead_id>/business/create/', counsellor_views.create_business, name='create_business'),
+    path('counsellor/leads/<int:lead_id>/transfer/request/', counsellor_views.request_lead_transfer, name='request_lead_transfer'),
+    path('counsellor/leads/<int:lead_id>/follow-up/schedule/', counsellor_views.schedule_follow_up, name='schedule_follow_up'),
+    path('counsellor/leads/<int:lead_id>/conversion/evaluate/', counsellor_views.evaluate_conversion_score, name='evaluate_conversion_score'),
+    path('counsellor/leads/<int:lead_id>/workflow/run/', counsellor_views.run_agentic_workflow, name='run_agentic_workflow'),
+    path('counsellor/leads/<int:lead_id>/mark-lost/', counsellor_views.mark_lead_lost, name='mark_lead_lost'),
+    
+    # Counsellor Business Management
+    path('counsellor/businesses/', counsellor_views.my_businesses, name='my_businesses'),
+    path('counsellor/businesses/<int:business_id>/', counsellor_views.business_detail, name='business_detail'),
+    path('counsellor/businesses/<int:business_id>/status/update/', counsellor_views.update_business_status, name='update_business_status'),
+    
+    # Counsellor Activities
+    path('counsellor/activities/', counsellor_views.my_activities, name='my_activities'),
+    
+    # Counsellor Analytics
+    path('counsellor/analytics/', counsellor_views.get_my_analytics, name='get_my_analytics'),
+    
+    # Notification Management
+    path('counsellor/notification/delete/<int:notification_id>/', views.delete_counsellor_notification, name='delete_counsellor_notification'),
+    path('admin/notification/delete/<int:notification_id>/', views.delete_admin_notification, name='delete_admin_notification'),
+    
+    # Test URL
+    path('test-login/', views.test_login, name='test_login'),
 ]

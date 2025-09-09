@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .EmailBackend import EmailBackend
-from .models import Attendance, Session, Subject, Student, NotificationStudent, NotificationStaff
+from .models import Lead, NotificationCounsellor, NotificationAdmin, Counsellor
 
 # Create your views here.
 
@@ -18,9 +18,7 @@ def login_page(request):
         if request.user.user_type == '1':
             return redirect(reverse("admin_home"))
         elif request.user.user_type == '2':
-            return redirect(reverse("staff_home"))
-        else:
-            return redirect(reverse("student_home"))
+            return redirect(reverse("counsellor_home"))
     return render(request, 'main_app/login.html')
 
 
@@ -28,49 +26,33 @@ def doLogin(request, **kwargs):
     if request.method != 'POST':
         return HttpResponse("<h4>Denied</h4>")
     else:
+        email = request.POST.get('email')
+        password = request.POST.get('password')
         
+        # Use EmailBackend directly since Django authenticate is not working
+        from .EmailBackend import EmailBackend
+        backend = EmailBackend()
+        user = backend.authenticate(request, username=email, password=password)
         
-        #Authenticate
-        user = EmailBackend.authenticate(request, username=request.POST.get('email'), password=request.POST.get('password'))
         if user != None:
             login(request, user)
+            
             if user.user_type == '1':
                 return redirect(reverse("admin_home"))
             elif user.user_type == '2':
-                return redirect(reverse("staff_home"))
+                return redirect(reverse("counsellor_home"))
             else:
-                return redirect(reverse("student_home"))
+                messages.error(request, "Invalid user type")
+                return redirect("/")
         else:
             messages.error(request, "Invalid details")
             return redirect("/")
-
 
 
 def logout_user(request):
     if request.user != None:
         logout(request)
     return redirect("/")
-
-
-@csrf_exempt
-def get_attendance(request):
-    subject_id = request.POST.get('subject')
-    session_id = request.POST.get('session')
-    try:
-        subject = get_object_or_404(Subject, id=subject_id)
-        session = get_object_or_404(Session, id=session_id)
-        attendance = Attendance.objects.filter(subject=subject, session=session)
-        attendance_list = []
-        for attd in attendance:
-            data = {
-                    "id": attd.id,
-                    "attendance_date": str(attd.date),
-                    "session": attd.session.id
-                    }
-            attendance_list.append(data)
-        return JsonResponse(json.dumps(attendance_list), safe=False)
-    except Exception as e:
-        return None
 
 
 def showFirebaseJS(request):
@@ -110,51 +92,85 @@ messaging.setBackgroundMessageHandler(function (payload) {
     return HttpResponse(data, content_type='application/javascript')
 
 
-def send_group_notification(request):
-    if request.method == "POST" and "send_notification" in request.POST:
-        selected_ids = request.POST.getlist("student_ids")
-        message = request.POST.get("group_message")
-        for id in selected_ids:
-            student = get_object_or_404(Student, admin_id=id)
-            NotificationStudent(student=student, message=message).save()
-        messages.success(request, "Group notification sent!")
-        # ... rest of your code ...
-
-
-def student_view_notification(request):
-    student = get_object_or_404(Student, admin=request.user)
+def counsellor_view_notification(request):
+    counsellor = get_object_or_404(Counsellor, admin=request.user)
     # Mark all as read
-    NotificationStudent.objects.filter(student=student, read=False).update(read=True)
-    notifications = NotificationStudent.objects.filter(student=student)
+    NotificationCounsellor.objects.filter(counsellor=counsellor, is_read=False).update(is_read=True)
+    notifications = NotificationCounsellor.objects.filter(counsellor=counsellor)
     context = {
         'notifications': notifications,
         'page_title': "View Notifications"
     }
-    return render(request, "student_template/student_view_notification.html", context)
+    return render(request, "counsellor_template/counsellor_view_notification.html", context)
 
 
-def staff_view_notification(request):
-    staff = get_object_or_404(Staff, admin=request.user)
+def admin_view_notification(request):
     # Mark all as read
-    NotificationStaff.objects.filter(staff=staff, read=False).update(read=True)
-    notifications = NotificationStaff.objects.filter(staff=staff)
+    NotificationAdmin.objects.filter(is_read=False).update(is_read=True)
+    notifications = NotificationAdmin.objects.all()
     context = {
         'notifications': notifications,
         'page_title': "View Notifications"
     }
-    return render(request, "staff_template/staff_view_notification.html", context)
+    return render(request, "admin_template/admin_view_notification.html", context)
 
 
 @require_POST
-def delete_student_notification(request, notification_id):
-    notification = get_object_or_404(NotificationStudent, id=notification_id, student__admin=request.user)
+def delete_counsellor_notification(request, notification_id):
+    notification = get_object_or_404(NotificationCounsellor, id=notification_id, counsellor__admin=request.user)
     notification.delete()
     messages.success(request, "Notification deleted.")
-    return redirect('student_view_notification')
+    return redirect('counsellor_view_notification')
 
 @require_POST
-def delete_staff_notification(request, notification_id):
-    notification = get_object_or_404(NotificationStaff, id=notification_id, staff__admin=request.user)
+def delete_admin_notification(request, notification_id):
+    notification = get_object_or_404(NotificationAdmin, id=notification_id)
     notification.delete()
     messages.success(request, "Notification deleted.")
-    return redirect('staff_view_notification')
+    return redirect('admin_view_notification')
+
+
+def test_login(request):
+    """Test view to debug login issues"""
+    if request.user.is_authenticated:
+        return HttpResponse(f"""
+        <h1>Login Test</h1>
+        <p>User: {request.user.email}</p>
+        <p>User Type: {request.user.user_type}</p>
+        <p>Is Staff: {request.user.is_staff}</p>
+        <p>Is Superuser: {request.user.is_superuser}</p>
+        <p><a href="/admin/home/">Go to Admin Home</a></p>
+        <p><a href="/logout_user/">Logout</a></p>
+        """)
+    else:
+        return HttpResponse("Not logged in")
+
+
+def delete_counsellor_notification(request, notification_id):
+    """Delete counsellor notification"""
+    if request.user.is_authenticated and request.user.user_type == '2':
+        notification = get_object_or_404(NotificationCounsellor, id=notification_id, counsellor__admin=request.user)
+        try:
+            notification.delete()
+            messages.success(request, "Notification deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Could not delete notification: {str(e)}")
+        return redirect(reverse('counsellor_view_notifications'))
+    else:
+        messages.error(request, "Access denied!")
+        return redirect(reverse('login_page'))
+
+
+def delete_admin_notification(request, notification_id):
+    """Delete admin notification"""
+    if request.user.is_authenticated and request.user.user_type == '1':
+        notification = get_object_or_404(NotificationAdmin, id=notification_id)
+        try:
+            notification.delete()
+            messages.success(request, "Notification deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Could not delete notification: {str(e)}")
+        return redirect(reverse('admin_view_notifications'))
+    else:
+        messages.error(request, "Access denied!")
+        return redirect(reverse('login_page'))

@@ -32,7 +32,7 @@ SECRET_KEY = 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7'  # Consider us
 DEBUG = True
 
 # ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
-ALLOWED_HOSTS = ['127.0.0.1']  # Not recommended but useful in dev mode
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Not recommended but useful in dev mode
 
 
 # Application definition
@@ -133,7 +133,7 @@ else:
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'  # Commented out to avoid conflict
 
 USE_I18N = True
 
@@ -171,6 +171,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(prod_db)
 
-# Razorpay Settings
-RAZORPAY_KEY_ID = 'rzp_test_1sfNB6g26WPGBC'  # Replace with your test key ID
-RAZORPAY_KEY_SECRET = 'nG7MSOJNYC4RoZqTyiOVYI3X'    # Replace with your test key secret
+
+# AI/LLM Settings
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+

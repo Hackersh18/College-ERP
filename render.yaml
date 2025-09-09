@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: college-management-django
+    env: python
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn college_management_system.wsgi:application --workers=3 --timeout=120
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "${RENDER_EXTERNAL_HOSTNAME}"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: college-management-db
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EMAIL_ADDRESS
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PORT
+        value: "10000"
+
+databases:
+  - name: college-management-db
+    plan: free

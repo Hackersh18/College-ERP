@@ -4,9 +4,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from datetime import datetime
-
-
+from datetime import datetime, timedelta
+import uuid
 
 
 class CustomUserManager(UserManager):
@@ -31,26 +30,17 @@ class CustomUserManager(UserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class Session(models.Model):
-    name = models.CharField(max_length=120, unique=True)
-    start_year = models.DateField()
-    end_year = models.DateField()
-
-    def __str__(self):
-        return self.name
-
-
 class CustomUser(AbstractUser):
-    USER_TYPE = ((1, "HOD"), (2, "Staff"), (3, "Student"))
+    USER_TYPE = ((1, "Admin"), (2, "Counsellor"))
     GENDER = [("M", "Male"), ("F", "Female")]
-    
     
     username = None  # Removed username, using email instead
     email = models.EmailField(unique=True)
     user_type = models.CharField(default=1, choices=USER_TYPE, max_length=1)
     gender = models.CharField(max_length=1, choices=GENDER)
-    profile_pic = models.ImageField()
+    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     address = models.TextField()
+    phone = models.CharField(max_length=15, blank=True)
     fcm_token = models.TextField(default="")  # For firebase notifications
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,241 +59,221 @@ class Admin(models.Model):
         return self.admin.first_name + " " + self.admin.last_name
 
 
-
-class Course(models.Model):
-    name = models.CharField(max_length=120)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    
-
-    def __str__(self):
-        return self.name
-
-
-class Student(models.Model):
+class Counsellor(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.PROTECT, null=True, blank=False)
-    session = models.ForeignKey(Session, on_delete=models.PROTECT, null=True)
+    employee_id = models.CharField(max_length=20, unique=True)
+    department = models.CharField(max_length=100, blank=True)
+    joining_date = models.DateField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    performance_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    total_leads_assigned = models.IntegerField(default=0)
+    total_business_generated = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return self.admin.first_name + " " + self.admin.last_name
+        return f"{self.admin.first_name} {self.admin.last_name} ({self.employee_id})"
 
 
-class Staff(models.Model):
-    courses = models.ManyToManyField(Course)
-    admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.admin.first_name + " " + self.admin.last_name
-
-
-class Subject(models.Model):
-    name = models.CharField(max_length=120)
-    staff = models.ForeignKey(Staff, on_delete=models.PROTECT)
-    course = models.ForeignKey(Course, on_delete=models.PROTECT)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Attendance(models.Model):
-    session = models.ForeignKey(Session, on_delete=models.PROTECT)
-    subject = models.ForeignKey(Subject, on_delete=models.PROTECT)
-    date = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class AttendanceReport(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    attendance = models.ForeignKey(Attendance, on_delete=models.CASCADE)
-    status = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class LeaveReportStudent(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    date = models.CharField(max_length=60)
-    message = models.TextField()
-    status = models.SmallIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class LeaveReportStaff(models.Model):
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    date = models.CharField(max_length=60)
-    message = models.TextField()
-    status = models.SmallIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class FeedbackStudent(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    feedback = models.TextField()
-    reply = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class FeedbackStaff(models.Model):
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    feedback = models.TextField()
-    reply = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class NotificationStaff(models.Model):
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    read = models.BooleanField(default=False)
-
-
-class NotificationStudent(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    read = models.BooleanField(default=False)
-
-
-class StudentResult(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    test = models.FloatField(default=0)
-    exam_title = models.CharField(max_length=100, default="Final Exam")
-    max_score = models.FloatField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class Assignment(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    file = models.FileField(upload_to='assignments/')
-    due_date = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} - {self.subject.name}"
-
-
-class Note(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    file = models.FileField(upload_to='notes/')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} - {self.subject.name}"
-
-
-class FeeCategory(models.Model):
+class LeadSource(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
-class Fee(models.Model):
-    PAYMENT_PERIOD = (
-        ('MONTHLY', 'Monthly'),
-        ('QUARTERLY', 'Quarterly'),
-        ('HALF_YEARLY', 'Half Yearly'),
-        ('ANNUAL', 'Annual')
+
+class Lead(models.Model):
+    LEAD_STATUS = (
+        ('NEW', 'New'),
+        ('CONTACTED', 'Contacted'),
+        ('QUALIFIED', 'Qualified'),
+        ('PROPOSAL_SENT', 'Proposal Sent'),
+        ('NEGOTIATION', 'Negotiation'),
+        ('CLOSED_WON', 'Closed Won'),
+        ('CLOSED_LOST', 'Closed Lost'),
+        ('TRANSFERRED', 'Transferred')
     )
     
-    category = models.ForeignKey(FeeCategory, on_delete=models.PROTECT)
-    course = models.ForeignKey(Course, on_delete=models.PROTECT)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_period = models.CharField(max_length=20, choices=PAYMENT_PERIOD, default='MONTHLY')
-    due_date = models.DateField()
-    is_active = models.BooleanField(default=True)
+    PRIORITY = (
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+        ('URGENT', 'Urgent')
+    )
+
+    lead_id = models.CharField(max_length=20, unique=True, default=uuid.uuid4)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15)
+    company = models.CharField(max_length=200, blank=True)
+    position = models.CharField(max_length=100, blank=True)
+    industry = models.CharField(max_length=100, blank=True)
+    source = models.ForeignKey(LeadSource, on_delete=models.PROTECT)
+    status = models.CharField(max_length=20, choices=LEAD_STATUS, default='NEW')
+    priority = models.CharField(max_length=10, choices=PRIORITY, default='MEDIUM')
+    assigned_counsellor = models.ForeignKey(Counsellor, on_delete=models.SET_NULL, null=True, blank=True)
+    previous_counsellor = models.ForeignKey(Counsellor, on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_leads')
+    expected_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    actual_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    notes = models.TextField(blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    website = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_contact_date = models.DateTimeField(null=True, blank=True)
+    next_follow_up = models.DateTimeField(null=True, blank=True)
+    # AI-evaluated probability of conversion (0-100)
+    conversion_score = models.IntegerField(null=True, blank=True)
+    # AI enrichment and routing
+    enriched_job_title = models.CharField(max_length=150, blank=True)
+    enrichment_notes = models.TextField(blank=True)
+    routed_to = models.CharField(max_length=100, blank=True)
+    routing_reason = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.category.name} - {self.course.name} - {self.amount} ({self.get_payment_period_display()})"
+        return f"{self.first_name} {self.last_name} - {self.company}"
 
-class FeePayment(models.Model):
-    PAYMENT_STATUS = (
+    def save(self, *args, **kwargs):
+        if not self.lead_id:
+            self.lead_id = f"LEAD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+
+
+class LeadActivity(models.Model):
+    ACTIVITY_TYPE = (
+        ('CALL', 'Phone Call'),
+        ('EMAIL', 'Email'),
+        ('MEETING', 'Meeting'),
+        ('PROPOSAL', 'Proposal Sent'),
+        ('FOLLOW_UP', 'Follow Up'),
+        ('TRANSFER', 'Lead Transfer'),
+        ('NOTE', 'Note')
+    )
+
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='activities')
+    counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPE)
+    subject = models.CharField(max_length=200)
+    description = models.TextField()
+    outcome = models.CharField(max_length=200, blank=True)
+    next_action = models.CharField(max_length=200, blank=True)
+    scheduled_date = models.DateTimeField(null=True, blank=True)
+    completed_date = models.DateTimeField(auto_now_add=True)
+    duration = models.IntegerField(default=0)  # in minutes
+    is_completed = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.lead.first_name} - {self.activity_type} - {self.subject}"
+
+
+class Business(models.Model):
+    BUSINESS_STATUS = (
         ('PENDING', 'Pending'),
-        ('PAID', 'Paid'),
-        ('OVERDUE', 'Overdue'),
+        ('ACTIVE', 'Active'),
+        ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled')
     )
-    
-    PAYMENT_METHOD = (
-        ('CASH', 'Cash'),
-        ('BANK_TRANSFER', 'Bank Transfer'),
-        ('CHEQUE', 'Cheque'),
-        ('ONLINE', 'Online Payment')
-    )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    fee = models.ForeignKey(Fee, on_delete=models.PROTECT)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateField()
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD)
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='PENDING')
-    transaction_id = models.CharField(max_length=100, blank=True)
-    receipt_number = models.CharField(max_length=50, unique=True)
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='businesses')
+    counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE)
+    business_id = models.CharField(max_length=20, unique=True, default=uuid.uuid4)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    value = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=BUSINESS_STATUS, default='PENDING')
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    payment_terms = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.student} - {self.fee} - {self.amount_paid}"
+        return f"{self.title} - {self.lead.first_name} {self.lead.last_name}"
 
     def save(self, *args, **kwargs):
-        if not self.receipt_number:
-            # Generate receipt number: RCPT-YYYYMMDD-XXXX
-            date_str = datetime.now().strftime('%Y%m%d')
-            last_receipt = FeePayment.objects.filter(
-                receipt_number__startswith=f'RCPT-{date_str}'
-            ).order_by('-receipt_number').first()
-            
-            if last_receipt:
-                last_number = int(last_receipt.receipt_number.split('-')[-1])
-                new_number = last_number + 1
-            else:
-                new_number = 1
-                
-            self.receipt_number = f'RCPT-{date_str}-{new_number:04d}'
-        
+        if not self.business_id:
+            self.business_id = f"BUS-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
         super().save(*args, **kwargs)
+
+
+class NotificationCounsellor(models.Model):
+    counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.counsellor.admin.first_name} - {self.message[:50]}"
+
+
+class NotificationAdmin(models.Model):
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Admin - {self.message[:50]}"
+
+
+class LeadTransfer(models.Model):
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
+    from_counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE, related_name='transfers_from')
+    to_counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE, related_name='transfers_to')
+    reason = models.TextField()
+    admin_approved = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.lead.first_name} {self.lead.last_name} - {self.from_counsellor} to {self.to_counsellor}"
+
+
+class CounsellorPerformance(models.Model):
+    counsellor = models.ForeignKey(Counsellor, on_delete=models.CASCADE)
+    month = models.DateField()  # First day of the month
+    total_leads_assigned = models.IntegerField(default=0)
+    total_leads_contacted = models.IntegerField(default=0)
+    total_leads_qualified = models.IntegerField(default=0)
+    total_business_generated = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    average_response_time = models.IntegerField(default=0)  # in hours
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['counsellor', 'month']
+
+    def __str__(self):
+        return f"{self.counsellor.admin.first_name} - {self.month.strftime('%B %Y')}"
 
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        if instance.user_type == 1:
+        if instance.user_type == '1':
             Admin.objects.create(admin=instance)
-        if instance.user_type == 2:
-            Staff.objects.create(admin=instance)
-        if instance.user_type == 3:
-            Student.objects.create(admin=instance)
+        # Note: Counsellor profiles are created manually in the view
+        # to avoid conflicts with employee_id requirements
 
 
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
-    if instance.user_type == 1:
-        instance.admin.save()
-    if instance.user_type == 2:
-        instance.staff.save()
-    if instance.user_type == 3:
-        instance.student.save()
+    try:
+        if instance.user_type == '1':
+            if hasattr(instance, 'admin'):
+                instance.admin.save()
+        if instance.user_type == '2':
+            if hasattr(instance, 'counsellor'):
+                instance.counsellor.save()
+    except Exception as e:
+        print(f"Error saving user profile: {e}")
