@@ -174,6 +174,15 @@ DEFAULT_FROM_EMAIL = f"CRM Portal <{os.environ.get('EMAIL_ADDRESS')}>"
 # Use regular static files storage to avoid missing file errors
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
+# Additional static files settings for production
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'main_app/static'),
+]
+
+# Whitenoise settings for better static file serving
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
+
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(prod_db)
 
