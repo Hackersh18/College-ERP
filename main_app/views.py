@@ -8,11 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .EmailBackend import EmailBackend
-from .models import Lead, NotificationCounsellor, NotificationAdmin, Counsellor
+from .models import Lead, NotificationCounsellor, NotificationAdmin, Counsellor, CustomUser
 from django.core.management import call_command
 from django.http import HttpResponse
 from io import StringIO
-from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -203,16 +202,17 @@ def create_superuser(request):
     
     try:
         # Check if superuser already exists
-        if User.objects.filter(is_superuser=True).exists():
+        if CustomUser.objects.filter(is_superuser=True).exists():
             return HttpResponse("<h1>Superuser already exists</h1>")
         
-        # Create superuser
-        user = User.objects.create_superuser(
-            username='admin',
+        # Create superuser using CustomUser model
+        user = CustomUser.objects.create_superuser(
             email='admin@example.com',
-            password='admin123'
+            password='admin123',
+            first_name='Admin',
+            last_name='User'
         )
         
-        return HttpResponse(f"<h1>Superuser created successfully!</h1><p>Username: admin<br>Password: admin123<br><strong>REMEMBER TO DELETE THIS VIEW AFTER USE!</strong></p>")
+        return HttpResponse(f"<h1>Superuser created successfully!</h1><p>Email: admin@example.com<br>Password: admin123<br><strong>REMEMBER TO DELETE THIS VIEW AFTER USE!</strong></p>")
     except Exception as e:
         return HttpResponse(f"<h1>Error creating superuser</h1><pre>{str(e)}</pre>")
