@@ -202,8 +202,12 @@ def create_superuser(request):
     
     try:
         # Check if superuser already exists
-        if CustomUser.objects.filter(is_superuser=True).exists():
-            return HttpResponse("<h1>Superuser already exists</h1>")
+        existing_superusers = CustomUser.objects.filter(is_superuser=True)
+        if existing_superusers.exists():
+            users_info = []
+            for user in existing_superusers:
+                users_info.append(f"Email: {user.email}, Active: {user.is_active}")
+            return HttpResponse(f"<h1>Superuser already exists</h1><p>{'<br>'.join(users_info)}</p>")
         
         # Create superuser using CustomUser model
         user = CustomUser.objects.create_superuser(
@@ -213,6 +217,37 @@ def create_superuser(request):
             last_name='User'
         )
         
-        return HttpResponse(f"<h1>Superuser created successfully!</h1><p>Email: admin@example.com<br>Password: admin123<br><strong>REMEMBER TO DELETE THIS VIEW AFTER USE!</strong></p>")
+        # Verify the user was created
+        user_check = CustomUser.objects.get(email='admin@example.com')
+        
+        return HttpResponse(f"<h1>Superuser created successfully!</h1><p>Email: admin@example.com<br>Password: admin123<br>User ID: {user_check.id}<br>Is Superuser: {user_check.is_superuser}<br>Is Active: {user_check.is_active}<br><strong>REMEMBER TO DELETE THIS VIEW AFTER USE!</strong></p>")
     except Exception as e:
-        return HttpResponse(f"<h1>Error creating superuser</h1><pre>{str(e)}</pre>")
+        import traceback
+        error_details = traceback.format_exc()
+        return HttpResponse(f"<h1>Error creating superuser</h1><pre>{str(e)}</pre><br><pre>{error_details}</pre>")
+
+
+def test_login_system(request):
+    """Test login system - REMOVE AFTER USE"""
+    secret_key = request.GET.get('key', '')
+    if secret_key != 'create_admin_2024':
+        return HttpResponse("Unauthorized", status=403)
+    
+    try:
+        # List all users
+        all_users = CustomUser.objects.all()
+        user_info = []
+        for user in all_users:
+            user_info.append(f"ID: {user.id}, Email: {user.email}, Is Superuser: {user.is_superuser}, Is Active: {user.is_active}")
+        
+        # Test authentication
+        test_user = CustomUser.objects.filter(email='admin@example.com').first()
+        auth_result = "User not found"
+        if test_user:
+            auth_result = f"User found: {test_user.email}, Active: {test_user.is_active}, Superuser: {test_user.is_superuser}"
+        
+        return HttpResponse(f"<h1>Login System Test</h1><h2>All Users:</h2><p>{'<br>'.join(user_info)}</p><h2>Test User:</h2><p>{auth_result}</p>")
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        return HttpResponse(f"<h1>Error testing login system</h1><pre>{str(e)}</pre><br><pre>{error_details}</pre>")
