@@ -105,30 +105,27 @@ WSGI_APPLICATION = 'college_management_system.wsgi.application'
 #}
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("postgresql://postgres.jyebnncvamizrdwyltdu:Helloworld@265482@aws-1-us-east-2.pooler.supabase.com:6543/postgres")
+        default="sqlite:///db.sqlite3"
     )
 }
 
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-if not DEBUG:
-    AUTH_PASSWORD_VALIDATORS = []
-else:
-    AUTH_PASSWORD_VALIDATORS = [
-        {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-        },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-        },
-    ]
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 
 # Internationalization
@@ -177,12 +174,41 @@ STATICFILES_DIRS = [
 # Use Django's default static files storage
 # STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
-prod_db = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(prod_db)
+# Update database configuration for production
+try:
+    prod_db = dj_database_url.config(conn_max_age=500)
+    if prod_db:
+        DATABASES['default'].update(prod_db)
+except Exception as e:
+    print(f"Database configuration error: {e}")
+    # Fall back to SQLite if production database fails
+    pass
 
 
 # AI/LLM Settings
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 
 #pip install -r requirements.txt && python manage.py migrate && echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(email='admin@example.com').exists() or User.objects.create_superuser('admin@example.com', 'admin123')" | python manage.py shell
