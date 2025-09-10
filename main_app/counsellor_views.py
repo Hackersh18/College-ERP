@@ -300,7 +300,10 @@ def counsellor_view_profile(request):
     total_leads = counsellor.lead_set.count()
     total_business = counsellor.business_set.filter(status='ACTIVE').aggregate(
         total=Sum('value'))['total'] or 0
-    conversion_rate = (counsellor.business_set.count() / total_leads * 100) if total_leads > 0 else 0
+    try:
+        conversion_rate = (counsellor.business_set.count() / total_leads * 100) if total_leads > 0 else 0
+    except ZeroDivisionError:
+        conversion_rate = 0
     
     context = {
         'counsellor': counsellor,

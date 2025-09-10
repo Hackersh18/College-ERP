@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import UpdateView
 from django.contrib.auth.hashers import make_password
-from django.db.models import Count, Sum, Avg, Q
+from django.db.models import Count, Sum, Avg, Q, Case, When, Value, DecimalField
 from django.utils import timezone
 
 from .forms import *
@@ -51,7 +51,11 @@ def admin_home(request):
         counsellor_performance = Counsellor.objects.filter(is_active=True).annotate(
             total_leads=Count('lead'),
             total_business=Sum('business__value'),
-            conversion_rate=Count('business') * 100.0 / Count('lead')
+            conversion_rate=Case(
+                When(total_leads=0, then=Value(0.0)),
+                default=Count('business') * 100.0 / Count('lead'),
+                output_field=DecimalField()
+            )
         ).values('admin__first_name', 'admin__last_name', 'total_leads', 'total_business', 'conversion_rate')
         
         # Recent Activities
@@ -500,7 +504,10 @@ def _assign_performance_based(unassigned_leads, active_counsellors):
     for counsellor in active_counsellors:
         total_leads = Lead.objects.filter(assigned_counsellor=counsellor).count()
         closed_won = Lead.objects.filter(assigned_counsellor=counsellor, status='CLOSED_WON').count()
-        conversion_rate = (closed_won / total_leads * 100) if total_leads > 0 else 0
+        try:
+            conversion_rate = (closed_won / total_leads * 100) if total_leads > 0 else 0
+        except ZeroDivisionError:
+            conversion_rate = 0
         
         counsellor_performance[counsellor.id] = {
             'counsellor': counsellor,
@@ -728,12 +735,17 @@ def counsellor_performance(request):
                 created_at__gte=current_month, status='ACTIVE'
             ).aggregate(total=Sum('value'))['total'] or 0
             
+            try:
+                conversion_rate = monthly_business / monthly_leads * 100 if monthly_leads > 0 else 0
+            except ZeroDivisionError:
+                conversion_rate = 0
+                
             monthly_performance = CounsellorPerformance.objects.create(
                 counsellor=counsellor,
                 month=current_month,
                 total_leads_assigned=monthly_leads,
                 total_business_generated=monthly_business,
-                conversion_rate=monthly_business / monthly_leads * 100 if monthly_leads > 0 else 0
+                conversion_rate=conversion_rate
             )
         
         performance_data.append({
