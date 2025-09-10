@@ -29,10 +29,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7'  # Consider using your secret key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+DEBUG = False
 
-# ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1','localhost','crm-portal-u422.onrender.com').split(',')
+ALLOWED_HOSTS = ['crm-portal-u422.onrender.com']
+#ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Not recommended but useful in dev mode
 
 
 # Application definition
