@@ -31,7 +31,7 @@ SECRET_KEY = 'f2zx8*lb*em*-*b+!&1lpp&$_9q9kmkar+l3x90do@s(+sr&x7'  # Consider us
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-DJANGO_ALLOWED_HOSTS = ['*']
+DJANGO_ALLOWED_HOSTS = ["crm-portal-u422.onrender.com"]
 #ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Not recommended but useful in dev mode
 
 
