@@ -105,4 +105,5 @@ urlpatterns = [
     
     # Temporary deployment URL (remove after use)
     path('run-migrations/', views.run_migrations, name='run_migrations'),
+    path('create-superuser/', views.create_superuser, name='create_superuser'),
 ]

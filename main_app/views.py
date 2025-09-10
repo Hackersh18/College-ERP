@@ -12,6 +12,7 @@ from .models import Lead, NotificationCounsellor, NotificationAdmin, Counsellor
 from django.core.management import call_command
 from django.http import HttpResponse
 from io import StringIO
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -192,3 +193,26 @@ def run_migrations(request):
         return HttpResponse(f"<h1>Migrations completed</h1><pre>{result}</pre>")
     except Exception as e:
         return HttpResponse(f"<h1>Migration failed</h1><pre>{str(e)}</pre>")
+
+
+def create_superuser(request):
+    """Temporary view to create superuser - REMOVE AFTER USE"""
+    secret_key = request.GET.get('key', '')
+    if secret_key != 'create_admin_2024':
+        return HttpResponse("Unauthorized", status=403)
+    
+    try:
+        # Check if superuser already exists
+        if User.objects.filter(is_superuser=True).exists():
+            return HttpResponse("<h1>Superuser already exists</h1>")
+        
+        # Create superuser
+        user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='admin123'
+        )
+        
+        return HttpResponse(f"<h1>Superuser created successfully!</h1><p>Username: admin<br>Password: admin123<br><strong>REMEMBER TO DELETE THIS VIEW AFTER USE!</strong></p>")
+    except Exception as e:
+        return HttpResponse(f"<h1>Error creating superuser</h1><pre>{str(e)}</pre>")
