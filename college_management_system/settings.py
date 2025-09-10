@@ -169,18 +169,16 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = f"CRM Portal <{os.environ.get('EMAIL_ADDRESS')}>"
 
-# Static files storage for production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Static files storage for production - simplified
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # Additional static files settings
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'main_app/static'),
 ]
 
-# Whitenoise settings
+# Whitenoise settings - simplified
 WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = True
-WHITENOISE_MANIFEST_STRICT = False
 
 prod_db = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(prod_db)
